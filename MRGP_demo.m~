@@ -1,0 +1,41 @@
+%% set path
+global MGP_path;
+MGP_path='/Users/litao/本地文稿/research/Mixture of Robust Gaussian Processes/release code'; % root path of this project
+GPML_path = '/Users/litao/本地文稿/research/Mixture of Robust Gaussian Processes/gpml-matlab-v4.2-2018-06-11/';
+run([GPML_path,'startup.m']);% gpml toolbox
+addpath(genpath(MGP_path));
+
+clear
+
+%%
+load('data/synthetic_datasets/S2_outlier_ratio_0.15_outlier_level_2.5.mat');
+draw_dataset(x_train,y_train,c_train,x_test,y_test,c_test);
+
+%% run MGP regression methods
+opts.alg = 'hard-cut'; 
+opts.lik = @likT;% @likLaplace
+opts.inf = @infVB; % @infLaplace @infEP 
+opts.covfunc = @covSEiso;
+opts.meanfunc = @meanZero;
+opts.maxiter = 20;
+opts.average = true;
+opts.verbose = true;
+K = 3;
+
+%%%% Learn MGP parameters
+% [ z_train,record] = MGP_learn(K,x_train,y_train,opts);
+%%%%%%%%% If you don't have ground-truth y_test
+% [y_pred,z_test,RMSE] =MGP_pred(x_train,y_train,z_train,x_test,record);
+%%%%%%%%% If you have ground-truth y_test, you can direcetly calculate RMSE
+% record.y_test = y_test;
+% [y_pred,z_test,RMSE] =MGP_pred(x_train,y_train,z_train,x_test,record);
+%%%%%%%%% When you have y_test, you can conduct the above two steps in one call
+[y_pred,z_test,z_train,RMSE,record] = MGP_learn_and_pred( x_train,y_train,K,x_test,y_test,opts);
+ 
+%%%% Draw predictive function and learned components
+draw_pred(x_train,y_train,z_train,mix_para,hyp,record);
+title(opts.alg);
+fprintf('Alg:%s RMSE:%4f\n', opts.alg, RMSE);
+ 
+ 
+ 
